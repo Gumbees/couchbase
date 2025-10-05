@@ -1,7 +1,9 @@
 version: "3.8"
 
 # CouchDB with Traefik reverse proxy configuration
-# Accessible via: ${COUCHDB_DOMAIN} (configurable in .env)
+# Accessible via (configure in .env):
+# - Public: ${PUBLIC_COUCHDB_DOMAIN}
+# - Private: ${PRIVATE_COUCHDB_DOMAIN}
 
 services:
   couchdb:
@@ -18,12 +20,18 @@ services:
       - app-network
       - traefik_public
     labels:
-      # Domain for CouchDB access - ${COUCHDB_DOMAIN}
+      # Public domain - ${PUBLIC_COUCHDB_DOMAIN}
       - "traefik.enable=true"
-      - "traefik.http.routers.couchdb.rule=Host(`${COUCHDB_DOMAIN}`)"
-      - "traefik.http.routers.couchdb.entrypoints=websecure"
-      - "traefik.http.routers.couchdb.tls.certresolver=letsencrypt"
-      - "traefik.http.services.couchdb.loadbalancer.server.port=5984"
+      - "traefik.http.routers.couchdb-public.rule=Host(`${PUBLIC_COUCHDB_DOMAIN}`)"
+      - "traefik.http.routers.couchdb-public.entrypoints=websecure"
+      - "traefik.http.routers.couchdb-public.tls.certresolver=letsencrypt"
+      - "traefik.http.services.couchdb-public.loadbalancer.server.port=5984"
+      
+      # Private domain - ${PRIVATE_COUCHDB_DOMAIN}
+      - "traefik.http.routers.couchdb-private.rule=Host(`${PRIVATE_COUCHDB_DOMAIN}`)"
+      - "traefik.http.routers.couchdb-private.entrypoints=websecure"
+      - "traefik.http.routers.couchdb-private.tls.certresolver=letsencrypt"
+      - "traefik.http.services.couchdb-private.loadbalancer.server.port=5984"
 
   cloudflared:
     image: cloudflare/cloudflared:latest
