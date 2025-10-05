@@ -17,7 +17,6 @@ services:
     volumes:
       - couchdb_data:/opt/couchdb/data
     networks:
-      - app-network
       - traefik_public
     # Configure CouchDB to listen on all interfaces for Traefik access
     command: >
@@ -51,7 +50,6 @@ services:
     # Note: Cloudflare Tunnel may not be needed if Traefik is handling external access
     command: sh -c 'if [ -n "$TUNNEL_TOKEN" ]; then cloudflared tunnel --no-autoupdate run --token $TUNNEL_TOKEN; else echo "CLOUDFLARE_TUNNEL_TOKEN is not set. Service is idle." && tail -f /dev/null; fi'
     networks:
-      - app-network
       - traefik_public
 
 volumes:
@@ -59,7 +57,5 @@ volumes:
     name: ${CONTAINER_NAME_PREFIX}-data
 
 networks:
-  app-network:
-    name: ${CONTAINER_NAME_PREFIX}-app
   traefik_public:
     external: true
