@@ -1,5 +1,10 @@
 version: "3.8"
 
+# CouchDB with Traefik reverse proxy configuration
+# Accessible via:
+# - Public: couchdb.beesroadhouse.com
+# - Private: couchdb.home.beesroadhouse.com
+
 services:
   couchdb:
     image: couchdb:latest
@@ -13,6 +18,20 @@ services:
       - couchdb_data:/opt/couchdb/data
     networks:
       - app-network
+      - traefik_public
+    labels:
+      # Public domain - couchdb.beesroadhouse.com
+      - "traefik.enable=true"
+      - "traefik.http.routers.couchdb-public.rule=Host(`couchdb.beesroadhouse.com`)"
+      - "traefik.http.routers.couchdb-public.entrypoints=websecure"
+      - "traefik.http.routers.couchdb-public.tls.certresolver=letsencrypt"
+      - "traefik.http.services.couchdb-public.loadbalancer.server.port=5984"
+      
+      # Private domain - couchdb.home.beesroadhouse.com
+      - "traefik.http.routers.couchdb-private.rule=Host(`couchdb.home.beesroadhouse.com`)"
+      - "traefik.http.routers.couchdb-private.entrypoints=websecure"
+      - "traefik.http.routers.couchdb-private.tls.certresolver=letsencrypt"
+      - "traefik.http.services.couchdb-private.loadbalancer.server.port=5984"
 
   cloudflared:
     image: cloudflare/cloudflared:latest
@@ -21,6 +40,7 @@ services:
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     # This command checks if the token is set before running the tunnel
+    # Note: Cloudflare Tunnel may not be needed if Traefik is handling external access
     command: sh -c 'if [ -n "$TUNNEL_TOKEN" ]; then cloudflared tunnel --no-autoupdate run --token $TUNNEL_TOKEN; else echo "CLOUDFLARE_TUNNEL_TOKEN is not set. Service is idle." && tail -f /dev/null; fi'
     networks:
       - app-network
