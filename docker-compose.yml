@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  couchdb:
+    image: couchdb:latest
+    container_name: ${CONTAINER_NAME_PREFIX}-app
+    restart: unless-stopped
+    environment:
+      - COUCHDB_USER=${COUCHDB_USER}
+      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD}
+      - TZ=${TZ}
+    volumes:
+      - couchdb_data:/opt/couchdb/data
+    networks:
+      - app-network
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ${CONTAINER_NAME_PREFIX}-cloudflared
+    restart: unless-stopped
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    # This command checks if the token is set before running the tunnel
+    command: sh -c 'if [ -n "$TUNNEL_TOKEN" ]; then cloudflared tunnel --no-autoupdate run --token $TUNNEL_TOKEN; else echo "CLOUDFLARE_TUNNEL_TOKEN is not set. Service is idle." && tail -f /dev/null; fi'
+    networks:
+      - app-network
+      - traefik_public
+
+volumes:
+  couchdb_data:
+    name: ${CONTAINER_NAME_PREFIX}-data
+
+networks:
+  app-network:
+    name: ${CONTAINER_NAME_PREFIX}-app
+  traefik_public:
+    external: true
