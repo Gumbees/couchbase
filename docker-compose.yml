@@ -19,6 +19,9 @@ services:
     networks:
       - app-network
       - traefik_public
+    # Configure CouchDB to listen on all interfaces for Traefik access
+    command: >
+      --bind_address 0.0.0.0
     labels:
       # Public domain - ${PUBLIC_COUCHDB_DOMAIN}
       - "traefik.enable=true"
