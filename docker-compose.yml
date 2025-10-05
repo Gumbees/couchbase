@@ -23,18 +23,23 @@ services:
     command: >
       --bind_address 0.0.0.0
     labels:
-      # Public domain - ${PUBLIC_COUCHDB_DOMAIN}
+      # Enable Traefik
       - "traefik.enable=true"
+      
+      # Service definition
+      - "traefik.http.services.couchdb.loadbalancer.server.port=5984"
+      
+      # Public domain router - ${PUBLIC_COUCHDB_DOMAIN}
       - "traefik.http.routers.couchdb-public.rule=Host(`${PUBLIC_COUCHDB_DOMAIN}`)"
       - "traefik.http.routers.couchdb-public.entrypoints=websecure"
       - "traefik.http.routers.couchdb-public.tls.certresolver=letsencrypt"
-      - "traefik.http.services.couchdb-public.loadbalancer.server.port=5984"
+      - "traefik.http.routers.couchdb-public.service=couchdb"
       
-      # Private domain - ${PRIVATE_COUCHDB_DOMAIN}
+      # Private domain router - ${PRIVATE_COUCHDB_DOMAIN}
       - "traefik.http.routers.couchdb-private.rule=Host(`${PRIVATE_COUCHDB_DOMAIN}`)"
       - "traefik.http.routers.couchdb-private.entrypoints=websecure"
       - "traefik.http.routers.couchdb-private.tls.certresolver=letsencrypt"
-      - "traefik.http.services.couchdb-private.loadbalancer.server.port=5984"
+      - "traefik.http.routers.couchdb-private.service=couchdb"
 
   cloudflared:
     image: cloudflare/cloudflared:latest
